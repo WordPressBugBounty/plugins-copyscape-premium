@@ -2,8 +2,8 @@
 Contributors: Copyscape
 Tags: copyscape, plagiarism, duplicate content, original, unique
 Requires at least: 3.0.1
-Tested up to: 6.6.1
-Stable tag: 1.3.6
+Tested up to: 6.6.2
+Stable tag: 1.3.7
 License: MIT
 License URI: http://opensource.org/licenses/MIT
 
@@ -111,3 +111,7 @@ Fix fatal error in some cases
 = 1.3.6 = 
 
 Add copyscape check button in WordPress 6.6.1
+
+= 1.3.7 = 
+
+Fixed CSRF vulnerability and updated to work with WordPress 6.6.2

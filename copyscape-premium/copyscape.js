@@ -74,11 +74,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         window.publishUpdateButtonClicked = false;
         
                         // console.log("Going to send request: " + updateType + "; docContent: " + docContent + "; post_id:" + copyscape_info.post_id);
-        
-                        jQuery.post(copyscape_info.ajax_url + "?action=copyscape_check", {
+
+                        jQuery.post(copyscape_info.ajax_url, {
+                            "action": "copyscape_check",
                             "caller_button": updateType,
                             "copyscape_post_id": copyscape_info.post_id,
-                            "post_content": docContent
+                            "post_content": docContent,
+                            "nonce": copyscape_info.nonce
                         }, function (response) {
                             // console.log(response);
         
@@ -105,10 +107,12 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        jQuery.post(copyscape_info.ajax_url + "?action=copyscape_check", {
+        jQuery.post(copyscape_info.ajax_url, {
+            "action": "copyscape_check",
             "caller_button": "check",
             "copyscape_post_id": copyscape_info.post_id,
-            "post_content": docContent
+            "post_content": docContent,
+            "nonce": copyscape_info.nonce
         }, function (response) {
             showCopyscapeNotice(response);
             document.getElementById('copyscape_check').innerHTML = 'Copyscape Check';
@@ -143,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     function appendCopyScapeButton(pubDiv, newWP = false) {
-        console.log(pubDiv, newWP);
+
         if (pubDiv != null) {
             if (pubDiv.childNodes.length > 0)
                 copyscapeDiv = pubDiv.insertBefore(copyscapeDiv, pubDiv.childNodes[0]);
