@@ -3,7 +3,7 @@
 Plugin Name: Copyscape Premium
 Plugin URI: http://www.copyscape.com/
 Description: The Copyscape Premium plugin lets you check if new content is unique before it is published, by checking for duplicate content on the web. If you do not already have a Copyscape Premium account, please <a href="http://www.copyscape.com/redirect/?to=prosignup" target="_blank">sign up</a>, select 'Premium API'  from the 'Copyscape Premium' menu, and click 'Enable API access'  to see your API key. Return to Wordpress, activate the WP plugin, and enter your API key when prompted, or enter it directly into the plugin <a href="./options-general.php?page=copyscape_menu">settings</a>.
-Version: 1.3.7
+Version: 1.3.8
 Author: Copyscape / Indigo Stream Technologies
 Author URI: http://www.copyscape.com/
 License: MIT
@@ -175,7 +175,7 @@ function copyscape_init()
 
     wp_enqueue_media();
 
-    wp_enqueue_script('copyscape-script', plugins_url('/copyscape.js', __FILE__), array('jquery'), '1.3.7', TRUE);
+    wp_enqueue_script('copyscape-script', plugins_url('/copyscape.js', __FILE__), array('jquery'), '1.3.8', TRUE);
     
     wp_localize_script(
         'copyscape-script',
@@ -442,15 +442,13 @@ function copyscape_post($new, $old, $post)
 function ajax_copyscape_post()
 {
     if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "copyscape_check") {
-        check_ajax_referer('copyscape_ajax_nonce', 'nonce');
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'copyscape_ajax_nonce')) {
+            wp_die('Security check failed');
+        }
+
         $post_id = $_POST['copyscape_post_id'];
         $post = get_post($post_id);
-
-//        if (get_option(OP_COPYSCAPE_PROCESS, FALSE) != FALSE){
-//            echo "error";
-//            die();
-//        }
-
 
         $arr = array();
 
