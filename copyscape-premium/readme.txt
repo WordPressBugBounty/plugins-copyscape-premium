@@ -3,7 +3,7 @@ Contributors: Copyscape
 Tags: copyscape, plagiarism, duplicate content, original, unique
 Requires at least: 3.0.1
 Tested up to: 6.6.2
-Stable tag: 1.3.8
+Stable tag: 1.3.9
 License: MIT
 License URI: http://opensource.org/licenses/MIT
 
@@ -119,3 +119,7 @@ Fixed CSRF vulnerability and updated to work with WordPress 6.6.2
 = 1.3.8 = 
 
 Fixed nonce validation issue
+
+= 1.3.9 = 
+
+Improve security and fix nonce validation issue

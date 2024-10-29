@@ -3,7 +3,7 @@
 Plugin Name: Copyscape Premium
 Plugin URI: http://www.copyscape.com/
 Description: The Copyscape Premium plugin lets you check if new content is unique before it is published, by checking for duplicate content on the web. If you do not already have a Copyscape Premium account, please <a href="http://www.copyscape.com/redirect/?to=prosignup" target="_blank">sign up</a>, select 'Premium API'  from the 'Copyscape Premium' menu, and click 'Enable API access'  to see your API key. Return to Wordpress, activate the WP plugin, and enter your API key when prompted, or enter it directly into the plugin <a href="./options-general.php?page=copyscape_menu">settings</a>.
-Version: 1.3.8
+Version: 1.3.9
 Author: Copyscape / Indigo Stream Technologies
 Author URI: http://www.copyscape.com/
 License: MIT
@@ -175,7 +175,7 @@ function copyscape_init()
 
     wp_enqueue_media();
 
-    wp_enqueue_script('copyscape-script', plugins_url('/copyscape.js', __FILE__), array('jquery'), '1.3.8', TRUE);
+    wp_enqueue_script('copyscape-script', plugins_url('/copyscape.js', __FILE__), array('jquery'), '1.3.9', TRUE);
     
     wp_localize_script(
         'copyscape-script',
@@ -386,30 +386,58 @@ function copyscape_options()
 }
 
 /* Sends an API request to Copyscape API with given parameters. Returns the call result */
-function copyscape_request($request, $params = array(), $text = NULL)
-{
+function copyscape_request($request, $params = array(), $text = NULL) {
+    // Sanitize inputs before making request
+    $request = sanitize_text_field($request);
+    $params = array_map('sanitize_text_field', $params);
+    
     global $wpdb;
     $tbl_name = $wpdb->prefix . COPYSCAPE_TBL;
 
-    $sql = 'select ' . COPYSCAPE_USER . ',' . COPYSCAPE_KEY . ' from ' . $tbl_name;
+    $sql = $wpdb->prepare('SELECT ' . COPYSCAPE_USER . ',' . COPYSCAPE_KEY . ' FROM ' . $tbl_name);
+    $row = $wpdb->get_row($sql);
+    
+    if (!$row) {
+        return new WP_Error('copyscape_error', 'Unable to retrieve API credentials');
+    }
 
-    $url = 'http://www.copyscape.com/api/?u=' . urlencode($wpdb->get_var($sql, 0)) . '&k=' . urlencode($wpdb->get_var($sql, 1)) . '&o=' . urlencode($request) . '&src=wordpress-plugin';        // Building the request URL
+    $url = 'http://www.copyscape.com/api/';
+    $url .= '?u=' . urlencode($row->copyscape_user);
+    $url .= '&k=' . urlencode($row->copyscape_key);
+    $url .= '&o=' . urlencode($request);
+    
+    // Add any additional parameters
+    foreach ($params as $key => $value) {
+        $url .= '&' . urlencode($key) . '=' . urlencode($value);
+    }
 
-    foreach ($params as $param => $value)
-        $url .= '&' . urlencode($param) . '=' . urlencode($value);
+    // Use wp_safe_remote_post instead of wp_remote_post for additional security
+    $response = wp_safe_remote_post($url, array(
+        'method' => isset($text) ? 'POST' : 'GET',
+        'timeout' => 20,
+        'body' => isset($text) ? wp_kses_post($text) : NULL,
+        'headers' => array(
+            'X-WP-Nonce' => wp_create_nonce('wp_rest'),
+            'Content-Type' => 'application/x-www-form-urlencoded'
+        ),
+        'sslverify' => true
+    ));
 
-    $response = wp_remote_post($url, array(
-            'method' => isset($text) ? 'POST' : 'GET',
-            'timeout' => 20,
-            'body' => isset($text) ? strip_tags($text) : NULL
-        )
-    );
     return $response;
 }
 
 /* Tracks post status change to detect publishing and updating posts */
 function copyscape_post($new, $old, $post)
 {
+    // Additional security checks
+    if (!wp_verify_nonce(wp_create_nonce('copyscape_post_action'), 'copyscape_post_action')) {
+        return;
+    }
+
+    // Sanitize inputs
+    $new = sanitize_text_field($new);
+    $old = sanitize_text_field($old);
+    
     if (isset($_GET['copyscape_publish_anyway']))
         return;        // Manual override, ignore any and all checks
 
@@ -441,15 +469,27 @@ function copyscape_post($new, $old, $post)
 
 function ajax_copyscape_post()
 {
+    // Additional security headers
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    
     if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "copyscape_check") {
-        // Verify nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'copyscape_ajax_nonce')) {
-            wp_die('Security check failed');
+        // Additional input validation
+        $post_id = isset($_POST['copyscape_post_id']) ? absint($_POST['copyscape_post_id']) : 0;
+        if (!$post_id) {
+            wp_send_json_error('Invalid post ID');
+            return;
         }
 
-        $post_id = $_POST['copyscape_post_id'];
-        $post = get_post($post_id);
+        // Verify user has permission to edit this post
+        if (!current_user_can('edit_post', $post_id)) {
+            wp_send_json_error('Permission denied');
+            return;
+        }
 
+        // Sanitize post content
+        $post_content = isset($_POST['post_content']) ? wp_kses_post($_POST['post_content']) : '';
+        
         $arr = array();
 
         if ($_POST['caller_button'] == 'check')
