@@ -3,7 +3,7 @@ Contributors: Copyscape
 Tags: copyscape, plagiarism, duplicate content, original, unique
 Requires at least: 3.0.1
 Tested up to: 6.6.2
-Stable tag: 1.3.9
+Stable tag: 1.4.0
 License: MIT
 License URI: http://opensource.org/licenses/MIT
 
@@ -123,3 +123,7 @@ Fixed nonce validation issue
 = 1.3.9 = 
 
 Improve security and fix nonce validation issue
+
+= 1.4.0 = 
+
+Escape input values to prevent XSS attacks

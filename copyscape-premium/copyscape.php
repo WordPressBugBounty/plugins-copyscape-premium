@@ -3,7 +3,7 @@
 Plugin Name: Copyscape Premium
 Plugin URI: http://www.copyscape.com/
 Description: The Copyscape Premium plugin lets you check if new content is unique before it is published, by checking for duplicate content on the web. If you do not already have a Copyscape Premium account, please <a href="http://www.copyscape.com/redirect/?to=prosignup" target="_blank">sign up</a>, select 'Premium API'  from the 'Copyscape Premium' menu, and click 'Enable API access'  to see your API key. Return to Wordpress, activate the WP plugin, and enter your API key when prompted, or enter it directly into the plugin <a href="./options-general.php?page=copyscape_menu">settings</a>.
-Version: 1.3.9
+Version: 1.4.0
 Author: Copyscape / Indigo Stream Technologies
 Author URI: http://www.copyscape.com/
 License: MIT
@@ -175,7 +175,7 @@ function copyscape_init()
 
     wp_enqueue_media();
 
-    wp_enqueue_script('copyscape-script', plugins_url('/copyscape.js', __FILE__), array('jquery'), '1.3.9', TRUE);
+    wp_enqueue_script('copyscape-script', plugins_url('/copyscape.js', __FILE__), array('jquery'), '1.4.0', TRUE);
     
     wp_localize_script(
         'copyscape-script',
@@ -254,8 +254,8 @@ function copyscape_options()
         wp_nonce_field('copyscape_wizard_first_action', 'copyscape_wizard_first_nonce');
         echo '<table class="form-table">';
         echo '<tr valign="top"><th scope="row" colspan = "2">Welcome to the official Copyscape plugin. To start using the plugin, please enter your Copyscape username and API key.</th></tr>';
-        echo '<tr valign="top"><th scope="row"><label for="' . COPYSCAPE_USER . '">Username</label></th><td><input type="text" name="' . COPYSCAPE_USER . '" id="' . COPYSCAPE_USER . '" value="" placeholder="'. $wpdb->get_var($sql, 0) .'" />&nbsp;&nbsp;' . $signup . '</td></tr>';
-        echo '<tr valign="top"><th scope="row"><label for="' . COPYSCAPE_KEY . '">API Key</label></th><td><input type="text" name="' . COPYSCAPE_KEY . '" id="' . COPYSCAPE_KEY . '" value="" placeholder="' . $wpdb->get_var($sql, 1) . '" />&nbsp;&nbsp;' . $getkey . '</td></tr>';
+        echo '<tr valign="top"><th scope="row"><label for="' . COPYSCAPE_USER . '">Username</label></th><td><input type="text" name="' . COPYSCAPE_USER . '" id="' . COPYSCAPE_USER . '" value="" placeholder="'. esc_attr($wpdb->get_var($sql, 0)) .'" />&nbsp;&nbsp;' . $signup . '</td></tr>';
+        echo '<tr valign="top"><th scope="row"><label for="' . COPYSCAPE_KEY . '">API Key</label></th><td><input type="text" name="' . COPYSCAPE_KEY . '" id="' . COPYSCAPE_KEY . '" value="" placeholder="' . esc_attr($wpdb->get_var($sql, 1)) . '" />&nbsp;&nbsp;' . $getkey . '</td></tr>';
         echo '</table><br/><input class="button-primary" type="submit" name="save_copyscape_wizard_first" id="save_copyscape_wizard_first" value="Verify API Connection"></form></div></div>';
         return;
     }
@@ -370,8 +370,8 @@ function copyscape_options()
 
     echo $balancerow;        // Show connection status and balance
 
-    echo '<tr valign="top"><th scope="row"><label for="' . COPYSCAPE_USER . '">Username</label></th><td><input type="text" name="' . COPYSCAPE_USER . '" id="' . COPYSCAPE_USER . '" value="' . $wpdb->get_var($sql, 0) . '" />&nbsp;&nbsp;' . $signup . '</td></tr>';
-    echo '<tr valign="top"><th scope="row"><label for="' . COPYSCAPE_KEY . '">API Key</label></th><td><input type="text" name="' . COPYSCAPE_KEY . '" id="' . COPYSCAPE_KEY . '" value="' . $wpdb->get_var($sql, 1) . '" />&nbsp;&nbsp;' . $getkey . '</td></tr>';
+    echo '<tr valign="top"><th scope="row"><label for="' . COPYSCAPE_USER . '">Username</label></th><td><input type="text" name="' . COPYSCAPE_USER . '" id="' . COPYSCAPE_USER . '" value="' . esc_attr($wpdb->get_var($sql, 0)) . '" />&nbsp;&nbsp;' . $signup . '</td></tr>';
+    echo '<tr valign="top"><th scope="row"><label for="' . COPYSCAPE_KEY . '">API Key</label></th><td><input type="text" name="' . COPYSCAPE_KEY . '" id="' . COPYSCAPE_KEY . '" value="' . esc_attr($wpdb->get_var($sql, 1)) . '" />&nbsp;&nbsp;' . $getkey . '</td></tr>';
     echo '<tr valign="top"><th scope="row"><label for="' . COPYSCAPE_AUTO . '" title="' . $publishinfo . '">Check on Publish</label></th><td><input type="checkbox" name="' . COPYSCAPE_AUTO . '" id="' . COPYSCAPE_AUTO . '" ' . ($wpdb->get_var($sql, 3) == TRUE ? 'checked' : 'unchecked') . ' title="' . $publishinfo . '" /> Check for copies when a post is published</td></tr>';
     echo '<tr valign="top"><th scope="row"><label for="' . COPYSCAPE_UPDATE . '" title="' . $updateinfo . '">Check on Update</label></th><td><input type="checkbox" name="' . COPYSCAPE_UPDATE . '" id="' . COPYSCAPE_UPDATE . '" ' . ($wpdb->get_var($sql, 4) == TRUE ? 'checked' : 'unchecked') . ' title="' . $updateinfo . '" /> Check for copies when a post is updated</td></tr>';
 
