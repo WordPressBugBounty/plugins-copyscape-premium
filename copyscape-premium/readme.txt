@@ -2,8 +2,8 @@
 Contributors: Copyscape
 Tags: copyscape, plagiarism, duplicate content, original, unique
 Requires at least: 3.0.1
-Tested up to: 6.6.2
-Stable tag: 1.4.0
+Tested up to: 6.9
+Stable tag: 1.4.2
 License: MIT
 License URI: http://opensource.org/licenses/MIT
 
@@ -127,3 +127,11 @@ Improve security and fix nonce validation issue
 = 1.4.0 = 
 
 Escape input values to prevent XSS attacks
+
+= 1.4.1 =
+
+Improve error message handling and Tested it up to latest WordPress Version
+
+= 1.4.2 =
+
+Security improvements and bug fixes

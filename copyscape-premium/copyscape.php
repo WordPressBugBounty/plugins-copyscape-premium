@@ -3,7 +3,7 @@
 Plugin Name: Copyscape Premium
 Plugin URI: http://www.copyscape.com/
 Description: The Copyscape Premium plugin lets you check if new content is unique before it is published, by checking for duplicate content on the web. If you do not already have a Copyscape Premium account, please <a href="http://www.copyscape.com/redirect/?to=prosignup" target="_blank">sign up</a>, select 'Premium API'  from the 'Copyscape Premium' menu, and click 'Enable API access'  to see your API key. Return to Wordpress, activate the WP plugin, and enter your API key when prompted, or enter it directly into the plugin <a href="./options-general.php?page=copyscape_menu">settings</a>.
-Version: 1.4.0
+Version: 1.4.2
 Author: Copyscape / Indigo Stream Technologies
 Author URI: http://www.copyscape.com/
 License: MIT
@@ -38,7 +38,6 @@ add_action('plugins_loaded', 'copyscape_update_tbl');        // Update table if 
 add_action('admin_init', 'copyscape_redirect');        // Redirects to First Time Wizard after setup (once!)
 add_action('admin_init', 'copyscape_roleset');        // Assigns can_copyscape to roles
 add_action('init', 'copyscape_override');        // Publishes post if user selects "publish anyway"
-add_action('wp_ajax_nopriv_copyscape_check', 'ajax_copyscape_post', 1);
 add_action('wp_ajax_copyscape_check', 'ajax_copyscape_post', 1);
 
 define('COPYSCAPE_TBL', 'copyscape_tbl');        // Table name
@@ -175,7 +174,7 @@ function copyscape_init()
 
     wp_enqueue_media();
 
-    wp_enqueue_script('copyscape-script', plugins_url('/copyscape.js', __FILE__), array('jquery'), '1.4.0', TRUE);
+    wp_enqueue_script('copyscape-script', plugins_url('/copyscape.js', __FILE__), array('jquery'), '1.4.1', TRUE);
     
     wp_localize_script(
         'copyscape-script',
@@ -225,18 +224,18 @@ function copyscape_options()
         }
 
         if (!isset($_POST[COPYSCAPE_USER]) or !isset($_POST[COPYSCAPE_KEY])) {        // Form fields not found
-            echo '<div id="message" class="updated"><p><strong>Form submit error!</strong></p></div>';        // This should never happen
+            echo '<div id="message" class="updated error"><p><strong>Form submit error!</strong></p></div>';        // This should never happen
         } else {
             $sql = $wpdb->prepare("update " . $tbl_name . " set " . COPYSCAPE_USER . " = %s, " . COPYSCAPE_KEY . " = %s", $_POST[COPYSCAPE_USER], $_POST[COPYSCAPE_KEY]);
             $wpdb->query($sql);
 
             $response = copyscape_request('balance');
             if (is_wp_error($response)) {
-                echo '<div id="message" class="updated"><p><strong>Failed to connect to Copyscape API - ' . $response->get_error_message() . '<br>Please check your connection and try again!</strong></p></div>';
+                echo '<div id="message" class="updated error"><p><strong>Failed to connect to Copyscape API - ' . $response->get_error_message() . '<br>Please check your connection and try again!</strong></p></div>';
             } else {
                 $result = copyscape_read_xml($response['body']);
                 if (isset($result['error'])) {
-                    echo '<div id="message" class="updated"><p><strong>Please ensure that you have entered a valid username and API key: ' . $result['error'] . '</strong></p></div>';
+                    echo '<div id="message" class="updated error"><p><strong>Please ensure that you have entered a valid username and API key: ' . $result['error'] . '</strong></p></div>';
                 } else {
                     echo '<div id="message" class="updated"><p><b>Successfully connected to the Copyscape API. Your balance is ' . number_format($result['total']) . ' credits ($' . number_format($result['value'], 2) . ')</b></p></div>';
                     $wpdb->query('update ' . $tbl_name . ' set ' . COPYSCAPE_WIZARD_FIRST . ' = TRUE');        // First wizard finished
@@ -326,7 +325,7 @@ function copyscape_options()
         }
 
         if (!isset($_POST[COPYSCAPE_USER]) or !isset($_POST[COPYSCAPE_KEY])) {        // Form fields not found - should never happen
-            echo '<div id="message" class="updated"><p><strong>Form submit error!</strong></p></div>';
+            echo '<div id="message" class="updated error"><p><strong>Form submit error!</strong></p></div>';
         } else {        // Saving everything
             $sql = $wpdb->prepare("update " . $tbl_name . " set " . COPYSCAPE_USER . " = %s, " . COPYSCAPE_KEY . " = %s, " . COPYSCAPE_ROLE . " = %s", $_POST[COPYSCAPE_USER], $_POST[COPYSCAPE_KEY], $_POST[COPYSCAPE_ROLE]);
             $wpdb->query($sql);
@@ -335,12 +334,12 @@ function copyscape_options()
 
             $response = copyscape_request('balance');
             if (is_wp_error($response)) {
-                echo '<div id="message" class="updated"><p><strong>Failed to connect to Copyscape API - ' . $response->get_error_message() . '<br>Please check your connection and try again!</strong></p></div>';
+                echo '<div id="message" class="updated error"><p><strong>Failed to connect to Copyscape API - ' . $response->get_error_message() . '<br>Please check your connection and try again!</strong></p></div>';
             } else {
                 $result = copyscape_read_xml($response['body']);
                 if (isset($result['error'])) {
-                    echo '<div id="message" class="updated"><p><strong>Copyscape API - Failed to validate: ' . $result['error'] . '</strong></p></div>';
-                } else echo '<div id="message" class="updated"><p><strong>Settings Saved!</strong></p></div>';
+                    echo '<div id="message" class="updated error"><p><strong>Copyscape API - Failed to validate: ' . $result['error'] . '</strong></p></div>';
+                } else echo '<div id="message" class="updated success"><p><strong>Settings Saved!</strong></p></div>';
             }
         }
     }
@@ -350,7 +349,7 @@ function copyscape_options()
     $balancerow = '<tr valign="top"><th scope="row" colspan = "2"><label style="color:Red"><b>Not Connected to the Copyscape API</b></label></th></tr>';
 
     if (is_wp_error($response)) {
-        echo '<div id="message" class="updated"><p><strong>Failed to connect to Copyscape API - ' . $response->get_error_message() . '<br>Please check your connection and try again!</strong></p></div>';
+        echo '<div id="message" class="updated error"><p><strong>Failed to connect to Copyscape API - ' . $response->get_error_message() . '<br>Please check your connection and try again!</strong></p></div>';
     } else {
         $result = copyscape_read_xml($response['body']);
         if (!isset($result['error'])) {        // Successfully connected to the Copyscape API
@@ -429,14 +428,9 @@ function copyscape_request($request, $params = array(), $text = NULL) {
 /* Tracks post status change to detect publishing and updating posts */
 function copyscape_post($new, $old, $post)
 {
-    // Additional security checks
-    if (!wp_verify_nonce(wp_create_nonce('copyscape_post_action'), 'copyscape_post_action')) {
-        return;
-    }
-
     // Sanitize inputs
-    $new = sanitize_text_field($new);
-    $old = sanitize_text_field($old);
+    $new = sanitize_text_field( $new );
+    $old = sanitize_text_field( $old );
     
     if (isset($_GET['copyscape_publish_anyway']))
         return;        // Manual override, ignore any and all checks
@@ -470,20 +464,26 @@ function copyscape_post($new, $old, $post)
 function ajax_copyscape_post()
 {
     // Additional security headers
-    header('X-Content-Type-Options: nosniff');
-    header('X-Frame-Options: SAMEORIGIN');
+    header( 'X-Content-Type-Options: nosniff' );
+    header( 'X-Frame-Options: SAMEORIGIN' );
     
-    if (isset($_REQUEST["action"]) && $_REQUEST["action"] == "copyscape_check") {
+    if ( isset( $_REQUEST["action"] ) && $_REQUEST["action"] == "copyscape_check" ) {
+        // Verify nonce for CSRF protection
+        if ( !isset( $_POST['copyscape_nonce'] ) || !wp_verify_nonce( $_POST['copyscape_nonce'], 'copyscape_ajax_nonce' ) ) {
+            wp_send_json_error( 'Security check failed' );
+            return;
+        }
+        
         // Additional input validation
-        $post_id = isset($_POST['copyscape_post_id']) ? absint($_POST['copyscape_post_id']) : 0;
-        if (!$post_id) {
-            wp_send_json_error('Invalid post ID');
+        $post_id = isset( $_POST['copyscape_post_id'] ) ? absint( $_POST['copyscape_post_id'] ) : 0;
+        if ( !$post_id ) {
+            wp_send_json_error( 'Invalid post ID' );
             return;
         }
 
         // Verify user has permission to edit this post
-        if (!current_user_can('edit_post', $post_id)) {
-            wp_send_json_error('Permission denied');
+        if ( !current_user_can( 'edit_post', $post_id ) ) {
+            wp_send_json_error( 'Permission denied' );
             return;
         }
 

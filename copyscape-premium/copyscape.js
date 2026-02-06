@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             "caller_button": updateType,
                             "copyscape_post_id": copyscape_info.post_id,
                             "post_content": docContent,
-                            "nonce": copyscape_info.nonce
+                            "copyscape_nonce": copyscape_info.nonce
                         }, function (response) {
                             // console.log(response);
         
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
             "caller_button": "check",
             "copyscape_post_id": copyscape_info.post_id,
             "post_content": docContent,
-            "nonce": copyscape_info.nonce
+            "copyscape_nonce": copyscape_info.nonce
         }, function (response) {
             showCopyscapeNotice(response);
             document.getElementById('copyscape_check').innerHTML = 'Copyscape Check';
